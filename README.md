@@ -25,7 +25,7 @@ Assume $u(c) = \log c$ and $f(k) = k^\alpha$
 
     For the constrained case, you'll need to divide your problem into two parts -- an unconstrained part for $t\in[0,\hat t]$ and a constrained part for $t\in[\hat t,T]$. My suggestion is that you characterize the constrained part analytically and compute the value of entering the constrained region---$V(\hat k, \hat t)$. Then make this a scrap value for your unconstrained part. You'll need to find the right TVC for a free $\hat t$ and free $\hat k$. You should be able to solve the unconstrained part with one of the 3 methods discussed in class (shooting or finite-element collocation with `BoundaryValueDiffEq.jl` or spectral collocation M&F/Judd style).
 
-    Alternatively, you can try using the callback capability of `BoundaryValueDiffEq.jl` to switch the ODEs at the point $\psi(t) = u'(f(k(t)))$. See [docs](https://docs.juliadiffeq.org/latest/features/callback_functions/). I'm also posting some draft code from my own research that tries implementing this. Note that it's not elegant, and I make no guarantees that it'll work...
+    Alternatively, you can try using the callback capability of `BoundaryValueDiffEq.jl` to switch the ODEs at the point $\psi(t) = u'(f(k(t)))$. See [docs](https://docs.juliadiffeq.org/latest/features/callback_functions/). In this repo, I'm also posting some draft code from my own research that tries implementing this. Note that it's not elegant, and I make no guarantees that it'll work...
 
 \begin{center}
 \pgfmathsetmacro{\alf}{0.5}
@@ -49,13 +49,17 @@ Assume $u(c) = \log c$ and $f(k) = k^\alpha$
 
 ## Note
 
-I know it takes a long time for packages to load and precompile when you first start a Jupyter Notebook. You can ease the pain here by creating a Julia *package* that includes a `Project.toml` and `Manifest.toml` file. If you put your Jupyter Notebook in this directory, it will know about all the Packages in the `.toml` files... and, if you `resolve` the package, it will quit precompiling so much. See the [`Pkg.jl`](https://julialang.github.io/Pkg.jl/v1/creating-packages/) docs. To do this
+I know it takes a long time for packages to load and precompile when you first start a Jupyter Notebook. You can ease the pain here by creating a Julia *package* that includes a `Project.toml` and `Manifest.toml` file. If you put your Jupyter Notebook in this directory, it will know about all the Packages in the `.toml` files... and, if you `resolve` the package, it will quit precompiling so much. See the [`Pkg.jl`](https://julialang.github.io/Pkg.jl/v1/creating-packages/) docs.
+
+To do this you can follow the directions below. Also see the screenshot below.
 
 1. In the REPL, switch to `shell` mode by typing `;` and change to a base directory, `cd [basedir]`
 2. In the REPL, switch to `package` mode by typing `]` and generate a new package `generate MyGeniusHwk06`
 3. In the REPL, cd into this directory `; cd MyGeniusHwk06`
 4. Activate the package in the current directory `] activate .`
 5. Add packages to your new package, for example, `] add Plots`
+
+![example of this in REPL](screen-capture.PNG)
 
 Now create a new Jupyter notebook in this directory. This Jupyter notebook should be aware of all the packages in your project `MyGeniusHwk06`. You can now manage the packages directly from your notebook.
 
