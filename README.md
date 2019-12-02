@@ -25,6 +25,8 @@ Assume $u(c) = \log c$ and $f(k) = k^\alpha$
 
     For the constrained case, you'll need to divide your problem into two parts -- an unconstrained part for $t\in[0,\hat t]$ and a constrained part for $t\in[\hat t,T]$. My suggestion is that you characterize the constrained part analytically and compute the value of entering the constrained region---$V(\hat k, \hat t)$. Then make this a scrap value for your unconstrained part. You'll need to find the right TVC for a free $\hat t$ and free $\hat k$. You should be able to solve the unconstrained part with one of the 3 methods discussed in class (shooting or finite-element collocation with `BoundaryValueDiffEq.jl` or spectral collocation M&F/Judd style).
 
+    Alternatively, you can try using the callback capability of `BoundaryValueDiffEq.jl` to switch the ODEs at the point $\psi(t) = u'(f(k(t)))$. See [docs](https://docs.juliadiffeq.org/latest/features/callback_functions/). I'm also posting some draft code from my own research that tries implementing this. Note that it's not elegant, and I make no guarantees that it'll work...
+
 \begin{center}
 \pgfmathsetmacro{\alf}{0.5}
 \pgfmathsetmacro{\rh}{0.1}
