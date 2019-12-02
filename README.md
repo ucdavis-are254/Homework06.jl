@@ -21,7 +21,7 @@ Assume $u(c) = \log c$ and $f(k) = k^\alpha$
 
 2. Plot phase-plane diagrams in $k,\psi$ (state / co-state) space for the model with and without irreversibility constraints. Indicate steady-states and nullclines.  Assume $\alpha = 0.5, \rho = 0.1, m = 0.3$. You might find the tikz/pgfplots code from the lecture notes helpful (see raw markdown.)
 
-3. Numerically solve for the optimal path given $k_0 = 1.15$ and $k_T = 1.15$ in both the constrained and unconstrained cases. Compare the optimal paths depending on whether the constraint binds. Try to find a short value for $T$ such that $c(0)$ increases when you impose the constraint. Now find a long value for $T$ such that $c(0)$ decreases.
+3. Numerically solve for the optimal path given $k_0 = 1.15$ and $k_T = 0.6$ in both the constrained and unconstrained cases. Compare the optimal paths depending on whether the constraint binds. Try to find a short value for $T$ such that $c(0)$ increases when you impose the constraint. Now find a long value for $T$ such that $c(0)$ decreases.
 
     For the constrained case, you'll need to divide your problem into two parts -- an unconstrained part for $t\in[0,\hat t]$ and a constrained part for $t\in[\hat t,T]$. My suggestion is that you characterize the constrained part analytically and compute the value of entering the constrained region---$V(\hat k, \hat t)$. Then make this a scrap value for your unconstrained part. You'll need to find the right TVC for a free $\hat t$ and free $\hat k$. You should be able to solve the unconstrained part with one of the 3 methods discussed in class (shooting or finite-element collocation with `BoundaryValueDiffEq.jl` or spectral collocation M&F/Judd style).
 
@@ -49,9 +49,7 @@ Assume $u(c) = \log c$ and $f(k) = k^\alpha$
 
 ## Note
 
-I know it takes a long time for packages to load and precompile when you first start a Jupyter Notebook. You can ease the pain here by creating a Julia *package* that includes a `Project.toml` and `Manifest.toml` file. If you put your Jupyter Notebook in this directory, it will know about all the Packages in the `.toml` files... and, if you `resolve` the package, it will quit precompiling so much. See the [`Pkg.jl`](https://julialang.github.io/Pkg.jl/v1/creating-packages/) docs.
-
-To do this
+I know it takes a long time for packages to load and precompile when you first start a Jupyter Notebook. You can ease the pain here by creating a Julia *package* that includes a `Project.toml` and `Manifest.toml` file. If you put your Jupyter Notebook in this directory, it will know about all the Packages in the `.toml` files... and, if you `resolve` the package, it will quit precompiling so much. See the [`Pkg.jl`](https://julialang.github.io/Pkg.jl/v1/creating-packages/) docs. To do this
 
 1. In the REPL, switch to `shell` mode by typing `;` and change to a base directory, `cd [basedir]`
 2. In the REPL, switch to `package` mode by typing `]` and generate a new package `generate MyGeniusHwk06`
