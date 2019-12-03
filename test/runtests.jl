@@ -45,5 +45,7 @@ plot!(1.2 : 0.1 : 2, k -> constr_boundary(cmodel,k); label="\$\\psi = u'(f(k))\$
 
 @test dVconstr_dthat(cmodel, tvc, 5.0) ≈ Calculus.derivative(t -> Vconstr(cmodel, tvc, t), 5.0)
 
-@show thatsol = find_that(cmodel, tvc)
+@show thatsol = find_that(cmodel, TVC(;tmax=40.0), [25.0,])
 t_hat = thatsol.zero[1]
+
+plot(20 : 0.1 : 40, t -> Homework06.that_root(cmodel, TVC(;tmax=40.0), t))

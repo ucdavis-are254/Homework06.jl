@@ -239,7 +239,7 @@ function that_root(x, tvc, that)
 
     dVdt = dVconstr_dthat(x, tvc, that)
 
-    return u - ψ*m*k - dVdt
+    return u - ψ*m*k + dVdt
 end
 
 

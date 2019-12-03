@@ -134,10 +134,10 @@ u(s,c) + \psi f(s,c) + \frac{ \partial V(\hat t;T,k_T)}{\partial \hat t} = 0
 $$
 We know that $\hat k \equiv k(\hat t)$. **Because of the continuity of $\psi$**, we can say that $\hat \psi = \psi(\hat t) = u'(f(\hat k))$. Now we have a cute root-finding problem for $\hat t$:
 $$
-\log f(\hat k) + \hat \psi[-m \hat k] - \frac{\partial V(\hat t; k_T, T)}{\partial \hat t} = 0
+\log f(\hat k) + \hat \psi[-m \hat k] + \frac{\partial V(\hat t; k_T, T)}{\partial \hat t} = 0
 $$
 where $\hat k = k_T e^{m(T-\hat t)}$ and $\hat \psi = u'(f(\hat k))$
 
 ### The BVP
 
-We're now in a position to solve the BVP. We know $t_0=0$ and $k_0$. We don't know $\hat t$, but once we do, then we also know $\hat k, \hat \psi$. So, our problem is to find $\hat t$ such that $(\hat k - k_0) = \int_0^{\hat t} \dot k(t) dt$. Because we are searching over an unknown $\hat t$, this makes collocation tricky... so we'll try shooting.
+We're now in a position to solve the BVP. We know $t_0,k_0$ and $\hat t, \hat k$. We don't know $\hat t$, but once we do, then we also know $\hat k, \hat \psi$. So, our problem is to find $\hat t$ such that $(\hat k - k_0) = \int_0^{\hat t} \dot k(t) dt$. Because we are searching over an unknown $\hat t$, this makes collocation tricky... so we'll try shooting.
