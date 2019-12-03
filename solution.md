@@ -109,11 +109,18 @@ $$
 $$
 Thus, we have that the current value of being at $t=\hat t$ is this gross function:
 $$
-V(\hat t; T, k_T) = \int_{\hat t}^T e^{-\rho t} \log(k_T e^{m(T-t)}) dt  = \left[\log(k_T e^{mT}) - \frac m \rho \right]\frac{e^{-\rho \hat t}- e^{-\rho T}}{\rho} - m\frac{e^{-\rho \hat t}\hat t - e^{-\rho T} T}{\rho}
+V(\hat t; T, k_T)
+= \int_{\hat t}^T e^{-\rho t} \log(k_T e^{m(T-t)}) dt
+= \left[\log(k_T e^{mT}) - \frac m \rho \right]\frac{e^{-\rho \hat t}- e^{-\rho T}}{\rho} - m\frac{e^{-\rho \hat t}\hat t - e^{-\rho T} T}{\rho}
+$$
+To transform this to current values instead of the value from the perspective of $t=0$
+$$
+e^{\rho \hat t} V(\hat t; T, k_T)
+= \left[\log(k_T e^{mT}) - \frac m \rho \right]\frac{1- e^{-\rho(T-\hat t)}}{\rho} - m\frac{\hat t - e^{-\rho (T-\hat t)} T}{\rho}
 $$
 We need to be able to compute $\frac{\partial V}{\partial \hat t}$ ~~and $\frac{\partial V}{\partial k(\hat t)}$~~ to get our TVC right. We can get
 $$
-\frac{\partial V}{\partial \hat t} = -\left[\log(k_T e^{mT}) - \frac m \rho \right]e^{-\rho \hat t} + \frac m \rho e^{-\rho \hat t}\left[\rho \hat t - 1\right] = e^{-\rho \hat t}\left[m \hat t - \log (k_Te^{mT}) - \frac{2m}{\rho} \right]
+\frac{\partial e^{\rho \hat t}V}{\partial \hat t} = -\left[\log(k_T e^{mT}) - \frac m \rho \right]e^{-\rho \hat t} + \frac m \rho e^{-\rho \hat t}\left[\rho \hat t - 1\right] = e^{-\rho \hat t}\left[m \hat t - \log (k_Te^{mT}) - \frac{2m}{\rho} \right]
 $$
 ~~We need $\partial V / \partial k_{\hat t}$. First, we know that $k(\hat t) = k_T e^{m(T-\hat t)}$, so $k_Te^{mT} = \hat k e^{m\hat t}$~~
 $$
