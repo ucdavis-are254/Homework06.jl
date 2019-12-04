@@ -2,14 +2,12 @@
 using Revise
 
 using Test
-using Calculus
 using NLsolve
 using Plots
 using Base: product
 using Homework06
 using DifferentialEquations
 using BoundaryValueDiffEq
-using Optim
 
 cmodel = ConstrGrowthModel()
 umodel = UnconstrGrowthModel()
@@ -40,16 +38,6 @@ plot!(ssk : 0.1 : 2, k -> psi_nullcline(cmodel,k); label="") # "\$\\dot \\psi = 
 
 # constraint boundary
 plot!(kstop(TVC()) : 0.1 : 2, k -> constr_boundary(cmodel,k); label="") # "\$\\psi = u'(f(k))\$", linestyle=:dash)
-
-# ----------------------------
-# check derivatives for scrap value
-# ----------------------------
-
-@test dVconstr_dthat(cmodel, tvc, 5.0) ≈ Calculus.derivative(t -> Vconstr(cmodel, tvc, t), 5.0)
-
-# @show thatsol = find_that(cmodel, TVC(;tmax=40.0), [25.0,])
-# t_hat = thatsol.zero[1]
-# plot(20 : 0.1 : 40, t -> Homework06.that_root(cmodel, TVC(;tmax=40.0), t))
 
 # ----------------------------
 # solve unconstrained bvp
