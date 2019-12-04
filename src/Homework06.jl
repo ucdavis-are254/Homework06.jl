@@ -52,6 +52,11 @@ export AbstractTVC, AbstractGrowthModel,
 
 abstract type AbstractTVC end
 abstract type AbstractGrowthModel end
+abstract type AbstractGrowthModelSolution end
+
+# -------------------------
+# TVC
+# -------------------------
 
 struct TVC <: AbstractTVC
     kstart::Float64
@@ -66,6 +71,10 @@ kstop(x::AbstractTVC) = x.kstop
 tmax(x::AbstractTVC) = x.tmax
 tmin(x::AbstractTVC) = zero(Float64)
 
+# -------------------------
+# Models
+# -------------------------
+
 struct ConstrGrowthModel <: AbstractGrowthModel
     alpha::Float64 # production
     rho::Float64   # discount
@@ -78,17 +87,14 @@ struct UnconstrGrowthModel <: AbstractGrowthModel
     depr::Float64  # depreciation
 end
 
-# outer constructor
-(::Type{T})(;alpha=0.5, rho=0.1, depr=0.3) where {T<:AbstractGrowthModel} = T(alpha, rho, depr)
-
-
-const GrowthModel = AbstractGrowthModel
+# outer constructor works for ConstrGrowthModel, UnconstrGrowthModel
+(::Type{GM})(;alpha=0.5, rho=0.1, depr=0.3) where {GM<:AbstractGrowthModel} = GM(alpha, rho, depr)
 
 #access fields of struct
-alpha(m::GrowthModel) = m.alpha
-rho(  m::GrowthModel) = m.rho
-depr( m::GrowthModel) = m.depr
-rho_depr(m::GrowthModel) = rho(m) + depr(m)
+alpha(m::AbstractGrowthModel) = m.alpha
+rho(  m::AbstractGrowthModel) = m.rho
+depr( m::AbstractGrowthModel) = m.depr
+rho_depr(m::AbstractGrowthModel) = rho(m) + depr(m)
 
 # because I changed the name of the function
 @deprecate rho_delta(m) rho_depr(m)
@@ -101,57 +107,30 @@ UnconstrGrowthModel(m::ConstrGrowthModel) = UnconstrGrowthModel(alpha(m), rho(m)
 # pdxn + mgl utility
 # -------------------------
 
-production(m::GrowthModel,k) = k^alpha(m)
-mglproduction(m::GrowthModel,k) = alpha(m)*k^(alpha(m)-1)
+production(m::AbstractGrowthModel,k) = k^alpha(m)
+mglproduction(m::AbstractGrowthModel,k) = alpha(m)*k^(alpha(m)-1)
 
-utility(m::GrowthModel, c) = log(c)
-mglutility(m::GrowthModel, c) = 1/c
+utility(m::AbstractGrowthModel, c) = log(c)
+mglutility(m::AbstractGrowthModel, c) = 1/c
 
-invmglutility(m::GrowthModel, psi) = 1/psi
+invmglutility(m::AbstractGrowthModel, psi) = 1/psi
 
 # -------------------------
 # steady states
 # -------------------------
 
 # steady states
-function steady_state_k(m::GrowthModel)
+function steady_state_k(m::AbstractGrowthModel)
     frac = alpha(m)/rho_depr(m)
     return frac^( 1/(1-alpha(m)) )
 end
-function steady_state_psi(m::GrowthModel)
+function steady_state_psi(m::AbstractGrowthModel)
     khat = steady_state_k(m)
     fk = production(m, khat)
     return 1/(fk - depr(m)*khat)
 end
-steady_state(m::GrowthModel) = (steady_state_k(m), steady_state_psi(m),)
 
-# -------------------------
-# scrap value
-# -------------------------
-
-# Value of being in constrained part
-function Vconstr(x::ConstrGrowthModel, tvc::AbstractTVC, that)
-    that <= tmax(tvc) || throw(DomainError(that))
-    exp_rho_that = exp(-rho(x)*that)
-    exp_rho_T = exp(-rho(x)*tmax(tvc))
-
-    a = log(kstop(tvc)) + depr(x)*tmax(tvc) - depr(x)/rho(x)
-    b = (exp_rho_that - exp_rho_T)/rho(x)
-
-    c = depr(x)/rho(x)
-    d = exp_rho_that*that - exp_rho_T*tmax(tvc)
-
-    return a*b - c*d
-end
-
-# Value of being in constrained part
-function dVconstr_dthat(x::ConstrGrowthModel, tvc::AbstractTVC, that::Number)
-    that <= tmax(tvc) || throw(DomainError(that))
-    exp_rho_that = exp(-rho(x)*that)
-    a = log(kstop(tvc)) + depr(x)*tmax(tvc) - depr(x)/rho(x)
-    b = depr(x)/rho(x)*(rho(x)*that - 1)
-    return exp_rho_that*(-a + b)
-end
+steady_state(m::AbstractGrowthModel) = (steady_state_k(m), steady_state_psi(m),)
 
 # -------------------------
 # ODEs
@@ -174,6 +153,7 @@ function dotk(m::ConstrGrowthModel, k, psi)
         return dotk(m_unconstr, k, psi)
     end
 end
+
 function dotpsi(m::ConstrGrowthModel, k, psi)
     if constr_binds(m,k,psi)
         return rho_depr(m)*psi - mglproduction(m,k) * mglutility(m,production(m,k))
@@ -196,7 +176,7 @@ end
 
 dotψ(args...) = dotpsi(args...)
 
-dot_kpsi(m::GrowthModel, y...) = (dotk(m,y...), dotpsi(m,y...))
+dot_kpsi(m::AbstractGrowthModel, y...) = (dotk(m,y...), dotpsi(m,y...))
 
 # solvers in DifferentialEquations.jl require functions that
 # take the form   `f!(dy, y, params, t)`
@@ -205,7 +185,7 @@ function dot_kpsi!(dy, y, m, t)
 end
 
 # -------------------------
-# plotting
+# Quiver plot
 # -------------------------
 
 function myquiver!(plt, model::AbstractGrowthModel; scalek=1, scalepsi=1, kwargs...)
@@ -258,10 +238,9 @@ end
 
 k_psi_hat(x, tvc, that) = [khat(x,tvc,that), psihat(x,tvc,that)]
 
-
 function bc!(residual, u, model, tvc, t)
-    residual[1] = first(u[end]) - kstart(tvc)  # k(0) = 15
-    residual[2] = first(u[1]) - kstop(tvc)  # k(T) = 20
+    residual[1] = first(u[end]) - kstart(tvc)  # k(0) = 1.15
+    residual[2] = first(u[1]) - kstop(tvc)     # k(T) = 0.6
     return residual
 end
 
@@ -272,7 +251,7 @@ function makeBVProblem(x::UnconstrGrowthModel, tvc, u0)
 end
 
 # -------------------------
-# Define ODE problems
+# Define ODE problems for constrained case
 # -------------------------
 
 function ODE_that_to_t0(x,tvc,that)
@@ -288,7 +267,7 @@ function ODE_that_to_T(x,tvc,that)
 end
 
 # -------------------------
-# Boundary conditions for \hat t
+# Shooting for \hat t as root-finding
 # -------------------------
 
 function that_residual(x::ConstrGrowthModel, tvc::TVC, that)
@@ -310,7 +289,7 @@ end
 # Solution concept
 # -------------------------
 
-abstract type AbstractGrowthModelSolution end
+const AGMS = AbstractGrowthModelSolution
 
 struct ConstrainedGrowthModelSolution{M<:ConstrGrowthModel, T<:ODESolution} <: AbstractGrowthModelSolution
     model::M
@@ -330,9 +309,10 @@ struct UnconstrainedGrowthModelSolution{M<:UnconstrGrowthModel, T<:ODESolution} 
     end
 end
 
-start(x::AbstractGrowthModelSolution) = minimum(x.sol0.t)
+start(x::AGMS) = minimum(x.sol0.t)
 stop(x::ConstrainedGrowthModelSolution) = maximum(x.sol1.t)
 stop(x::UnconstrainedGrowthModelSolution) = maximum(x.sol0.t)
+tgrid(x::AGMS, n=101) = range(start(x); stop=stop(x), length=n)
 
 function solution(x::ConstrGrowthModel,tvc,that)
     sol0 = solve(ODE_that_to_t0(x,tvc,that), Tsit5())
@@ -350,13 +330,13 @@ t_in_sol(x::ODESolution, t) = (minimum(x.t) <= t <= maximum(x.t))
 pick_solution(x::ConstrainedGrowthModelSolution, t) = t_in_sol(x.sol0, t) ? x.sol0 : x.sol1
 pick_solution(x::UnconstrainedGrowthModelSolution, t) = x.sol0
 
-kψpath(x::AbstractGrowthModelSolution, t) = pick_solution(x,t)(t)
-kpath( x::AbstractGrowthModelSolution, t) = first(kψpath(x,t))
-ψpath( x::AbstractGrowthModelSolution, t) = last(kψpath(x,t))
-dotk(  x::AbstractGrowthModelSolution, t) = dotk(x.model, kψpath(x,t)...)
-dotψ(  x::AbstractGrowthModelSolution, t) = dotψ(x.model, kψpath(x,t)...)
-consumption(x::AbstractGrowthModelSolution, t) = consumption(x.model, kψpath(x,t)...)
-get_that(x::AbstractGrowthModelSolution) = maximum(x.sol0.t)
+kψpath(x::AGMS, t) = pick_solution(x,t)(t)
+kpath( x::AGMS, t) = first(kψpath(x,t))
+ψpath( x::AGMS, t) = last(kψpath(x,t))
+dotk(  x::AGMS, t) = dotk(x.model, kψpath(x,t)...)
+dotψ(  x::AGMS, t) = dotψ(x.model, kψpath(x,t)...)
+consumption(x::AGMS, t) = consumption(x.model, kψpath(x,t)...)
+get_that(x::AGMS) = maximum(x.sol0.t)
 
 kψpath(     x) = map(t -> kψpath(     x, t), tgrid(x))
 kpath(      x) = map(t -> kpath(      x, t), tgrid(x))
@@ -366,11 +346,7 @@ dotψ(       x) = map(t -> dotψ(       x, t), tgrid(x))
 consumption(x) = map(t -> consumption(x, t), tgrid(x))
 
 
-function tgrid(x::AbstractGrowthModelSolution, n=101)
-    return range(start(x); stop=stop(x), length=n)
-end
-
-function solutionplots(solutions::AbstractGrowthModelSolution)
+function solutionplots(solutions::AGMS)
     ts = tgrid(solutions) #  = range(0; stop=tmax(tvc), length=500)
 
     plt1 = plot(title="optimal path", legend=:left)
@@ -385,37 +361,50 @@ function solutionplots(solutions::AbstractGrowthModelSolution)
     return plt1, plt2
 end
 
-
 # -------------------------
-# Optimal switchtime
+# TVC for free end-time
 # -------------------------
 
-function that_root(x, tvc, that)
-    k = khat(x,tvc,that)
-    ψ = psihat(x,tvc,that)
-    m = depr(x)
-
-    fk = production(x,k)
-    u = utility(x, fk)
-
-    dVdt = dVconstr_dthat(x, tvc, that)
-
-    return u - ψ*m*k + dVdt
+function hamiltonian(m::UnconstrGrowthModel, k, ψ)
+    c = consumption(m,k,ψ)
+    return utility(m, c) + ψ * dotk(m,k,ψ)
 end
 
-
-function that_root!(F, x, tvc, that)
-    F[1] = that_root(x, tvc, that[1])
+function hamiltonian(m::UnconstrGrowthModel, tvc::TVC, ψ)
+    return hamiltonian(m, kstop(tvc), ψ)
 end
 
+function hamiltonian!(res, m::UnconstrGrowthModel, tvc::TVC, ψ::Vector)
+    res[1] = hamiltonian(m, kstop(tvc), ψ[1])
+end
 
-# find_that(x,tvc, that0::Vector=[1.0,]) = nlsolve((F,t) -> that_root!(F,x,tvc,t), that0)
+# -------------------------
+# scrap value
+# -------------------------
 
-#
-# function bc!(residual, sol, p, t)
-#     residual[1] = sol(pi/4)[1] + pi/2 # use the interpolation here, since indexing will be wrong for adaptive methods
-#     residual[2] = sol(pi/2)[1] - pi/2
-# end
+# Value of being in constrained part
+function Vconstr(x::ConstrGrowthModel, tvc::AbstractTVC, that)
+    that <= tmax(tvc) || throw(DomainError(that))
+    exp_rho_that = exp(-rho(x)*that)
+    exp_rho_T = exp(-rho(x)*tmax(tvc))
+
+    a = log(kstop(tvc)) + depr(x)*tmax(tvc) - depr(x)/rho(x)
+    b = (exp_rho_that - exp_rho_T)/rho(x)
+
+    c = depr(x)/rho(x)
+    d = exp_rho_that*that - exp_rho_T*tmax(tvc)
+
+    return a*b - c*d
+end
+
+# Value of being in constrained part
+function dVconstr_dthat(x::ConstrGrowthModel, tvc::AbstractTVC, that::Number)
+    that <= tmax(tvc) || throw(DomainError(that))
+    exp_rho_that = exp(-rho(x)*that)
+    a = log(kstop(tvc)) + depr(x)*tmax(tvc) - depr(x)/rho(x)
+    b = depr(x)/rho(x)*(rho(x)*that - 1)
+    return exp_rho_that*(-a + b)
+end
 
 
 end # module

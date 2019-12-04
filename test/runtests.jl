@@ -26,8 +26,8 @@ tvc = TVC()
 plt_quiv = plot(;legend=:topright, xlabel="\$k\$", ylabel="\$\\psi\$")
 
 # add quivers
-myquiver!(plt_quiv, umodel; scalek=0.2, arrow=arrow(:closed), label="Unconstrained", alpha=0.1)
-myquiver!(plt_quiv, cmodel; scalek=0.2, arrow=arrow(:closed), label="Constrained", alpha=0.1)
+myquiver!(plt_quiv, umodel; scalek=0.2, scalepsi=1.0, arrow=arrow(:closed), label="Unconstrained", alpha=0.1)
+myquiver!(plt_quiv, cmodel; scalek=0.2, scalepsi=1.0, arrow=arrow(:closed), label="Constrained", alpha=0.1)
 
 # steady state
 ssk, ssψ = steady_state(umodel)
@@ -158,33 +158,28 @@ p = deepcopy(plt_quiv)
 plot!(p, kpath(sol3c), ψpath(sol3c), label = "", linestyle=:dash) # "\$T=$(tmax(tvc1))\$")
 plot!(p, kpath(sol3u), ψpath(sol3u), label = "") # "\$T=$(tmax(tvc1))\$")
 
+# ----------------------------
+# About the free end-time TVC
+# ----------------------------
 
+# create a new plot
+plt_quiv2 = plot(;legend=:topright, xlabel="\$k\$", ylabel="\$\\psi\$")
 
+# add quivers
+myquiver!(plt_quiv2, umodel; arrow=arrow(:closed), label="Unconstrained", alpha=0.1)
 
+kTs = 0.5 : 0.05 : 1.5
+psiTs = [
+    nlsolve( (res, psiT) -> Homework06.hamiltonian!(res, umodel, TVC(;kstop=k), psiT), [1.0,]).zero[1]
+    for k in kTs
+]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# steady state
+ssk, ssψ = steady_state(umodel)
+scatter!([ssk],[ssψ], label="") # label="SS")
+plot!(kstop(TVC()) : 0.1 : 2, k -> k_nullcline(umodel,k); label="") # "\$\\dot k = 0\$")
+vline!([ssk,]; label="") # "\$\\dot \\psi = 0\$")
+plot!(kpath(sol3u), ψpath(sol3u), label = "") # "\$T=$(tmax(tvc1))\$")
+scatter!(kTs, psiTs, label="\$\\mathcal H = 0\$")
 
 ##
